@@ -146,15 +146,14 @@
 
       try {
         const sessionsQuery = query(
-          collection(db, "boardingSessions"),
-          where("boardingCode", "==", code),
-          where("active", "==", true)
-        );
+  collection(db, "boardingSessions"),
+  where("boardingCode", "==", code)
+);
 
         const snapshot = await getDocs(sessionsQuery);
 
         if (snapshot.empty) {
-          setMessage("No active boarding session found for this code.", "bad");
+          setMessage("No boarding session found for this code.", "bad");
           return;
         }
 
