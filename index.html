@@ -83,6 +83,50 @@
     .message.bad {
       color: #ff4b4b;
     }
+
+    .hidden {
+  display: none;
+}
+
+.verified-card {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.verified-title {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.verified-route {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.verified-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.verified-label {
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.verified-value {
+  margin-top: 5px;
+  font-size: 24px;
+  font-weight: 950;
+}
   </style>
 </head>
 
@@ -95,6 +139,22 @@
     <button id="verifyButton" type="button">Verify Boarding</button>
 
     <div class="message" id="messageText"></div>
+    <section class="verified-card hidden" id="verifiedCard">
+  <div class="verified-title" id="verifiedFlightTitle">--</div>
+  <div class="verified-route" id="verifiedRoute">-- → --</div>
+
+  <div class="verified-grid">
+    <div>
+      <div class="verified-label">Seat</div>
+      <div class="verified-value" id="verifiedSeat">--</div>
+    </div>
+
+    <div>
+      <div class="verified-label">Gate</div>
+      <div class="verified-value" id="verifiedGate">--</div>
+    </div>
+  </div>
+</section>
   </main>
 
   <script type="module">
@@ -127,6 +187,12 @@
     const verifyButton = document.getElementById("verifyButton");
     const messageText = document.getElementById("messageText");
 
+    const verifiedCard = document.getElementById("verifiedCard");
+const verifiedFlightTitle = document.getElementById("verifiedFlightTitle");
+const verifiedRoute = document.getElementById("verifiedRoute");
+const verifiedSeat = document.getElementById("verifiedSeat");
+const verifiedGate = document.getElementById("verifiedGate");
+
     function setMessage(text, type = "") {
       messageText.textContent = text;
       messageText.className = `message ${type}`;
@@ -158,12 +224,19 @@
         }
 
         const sessionDoc = snapshot.docs[0];
+        const session = sessionDoc.data();
 
         await updateDoc(doc(db, "boardingSessions", sessionDoc.id), {
           verified: true,
           verifiedAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
+
+        verifiedFlightTitle.textContent = `${session.airline || ""}${session.flightNumber || ""}`;
+verifiedRoute.textContent = `${session.departureAirport || "--"} → ${session.arrivalAirport || "--"}`;
+verifiedSeat.textContent = session.assignedSeat || "--";
+verifiedGate.textContent = session.boardingGate || "--";
+verifiedCard.classList.remove("hidden");
 
         setMessage("Boarding verified. Gate departure unlocked.", "good");
         boardingCodeInput.value = "";
