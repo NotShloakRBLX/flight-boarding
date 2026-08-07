@@ -198,6 +198,61 @@ const verifiedGate = document.getElementById("verifiedGate");
       messageText.className = `message ${type}`;
     }
 
+    function getTimestampMs(value) {
+  if (!value) return 0;
+
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  if (typeof value === "number") {
+    return value;
+  }
+
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function getBoardingStartMs(session) {
+  return getTimestampMs(
+    session.boardingStartedAt ||
+    session.boardingStartAt ||
+    session.startedAt ||
+    session.createdAt
+  );
+}
+
+function getActiveBoardingGroup(session) {
+  const boardingStartMs = getBoardingStartMs(session);
+
+  if (!boardingStartMs) {
+    return 1;
+  }
+
+  const elapsedMinutes = Math.max(0, (Date.now() - boardingStartMs) / 60000);
+
+  if (elapsedMinutes < 1.5) return 1;
+  if (elapsedMinutes < 3) return 2;
+  if (elapsedMinutes < 5) return 3;
+  if (elapsedMinutes < 7) return 4;
+  if (elapsedMinutes < 11) return 5;
+  if (elapsedMinutes < 15) return 6;
+  if (elapsedMinutes < 20) return 7;
+  if (elapsedMinutes < 25) return 8;
+
+  return 9;
+}
+
+function canBoardByGroup(session) {
+  const passengerGroup = Number(session.boardingGroup || 0);
+
+  if (!Number.isFinite(passengerGroup) || passengerGroup <= 0) {
+    return true;
+  }
+
+  return passengerGroup <= getActiveBoardingGroup(session);
+}
+
     async function verifyBoardingCode() {
       const code = boardingCodeInput.value.trim().toUpperCase();
 
@@ -224,13 +279,19 @@ const verifiedGate = document.getElementById("verifiedGate");
         }
 
         const sessionDoc = snapshot.docs[0];
-        const session = sessionDoc.data();
+const session = sessionDoc.data();
 
-        await updateDoc(doc(db, "boardingSessions", sessionDoc.id), {
-          verified: true,
-          verifiedAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
+if (!canBoardByGroup(session)) {
+  verifiedCard.classList.add("hidden");
+  setMessage("Your group isn't boarding yet", "bad");
+  return;
+}
+
+await updateDoc(doc(db, "boardingSessions", sessionDoc.id), {
+  verified: true,
+  verifiedAt: serverTimestamp(),
+  updatedAt: serverTimestamp()
+});
 
         verifiedFlightTitle.textContent = `${session.airline || ""}${session.flightNumber || ""}`;
 verifiedRoute.textContent = `${session.departureAirport || "--"} → ${session.arrivalAirport || "--"}`;
