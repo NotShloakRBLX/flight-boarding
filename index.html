@@ -217,6 +217,7 @@ function getBoardingStartMs(session) {
   return getTimestampMs(
     session.boardingStartedAt ||
     session.boardingStartAt ||
+    session.startedAtMs ||
     session.startedAt ||
     session.createdAt
   );
