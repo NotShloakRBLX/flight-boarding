@@ -384,13 +384,21 @@ verifiedCard.classList.remove("hidden");
       }
     }
 
-    verifyButton.addEventListener("click", verifyBoardingCode);
+    verifyButton.disabled = true;
 
-    boardingCodeInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        verifyBoardingCode();
-      }
-    });
+function startBoardingVerificationSite() {
+  verifyButton.disabled = false;
+
+  verifyButton.addEventListener("click", verifyBoardingCode);
+
+  boardingCodeInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      verifyBoardingCode();
+    }
+  });
+}
+
+requireOwnerAuth(startBoardingVerificationSite);
   </script>
 </body>
 </html>
